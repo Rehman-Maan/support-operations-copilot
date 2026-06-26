@@ -77,6 +77,9 @@ jobs:
       - name: Run Playwright E2E smoke test
         run: pytest tests/e2e
 
+      - name: Apply migrations for smoke commands
+        run: python manage.py migrate --noinput
+
       - name: Run support eval smoke suite
         run: |
           python manage.py shell -c "from django.contrib.auth import get_user_model; from apps.teams.models import Team, TeamMembership; from services.evaluations.runner import run_support_case_evaluation; User=get_user_model(); user=User.objects.create_user(username='ci-agent'); team=Team.objects.create(name='CI Support', slug='ci-support', created_by=user); TeamMembership.objects.create(team=team, user=user, role=TeamMembership.Role.SUPPORT_AGENT); run=run_support_case_evaluation('support_cases.yml', team); print(f'eval cases={run.case_count} f1={run.classifier_f1:.2f}')"
