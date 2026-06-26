@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluations{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Quality checks</p>
+      <h1>Evaluation dashboard</h1>
+      <p class="subtle">Track classifier, escalation, and grounded reply quality.</p>
+    </div>
+    <form method="post" action="{% url 'evaluations:run' %}">
+      {% csrf_token %}
+      <button type="submit">Run support eval</button>
+    </form>
+  </div>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if latest_run %}
+    <section class="stat-grid">
+      <div class="stat">
+        <span>Classifier F1</span>
+        <strong>{{ latest_run.classifier_f1|floatformat:2 }}</strong>
+      </div>
+      <div class="stat">
+        <span>Escalation precision</span>
+        <strong>{{ latest_run.escalation_precision|floatformat:2 }}</strong>
+      </div>
+      <div class="stat">
+        <span>Escalation recall</span>
+        <strong>{{ latest_run.escalation_recall|floatformat:2 }}</strong>
+      </div>
+      <div class="stat">
+        <span>Groundedness</span>
+        <strong>{{ latest_run.groundedness_score|floatformat:2 }}</strong>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Latest run</h2>
+        <span class="badge low">{{ latest_run.case_count }} cases</span>
+      </div>
+      <dl class="definition-list">
+        <div>
+          <dt>Dataset</dt>
+          <dd>{{ latest_run.dataset_name }}</dd>
+        </div>
+        <div>
+          <dt>Model</dt>
+          <dd>{{ latest_run.model_name }}</dd>
+        </div>
+        <div>
+          <dt>Average latency</dt>
+          <dd>{{ latest_run.average_latency_ms|floatformat:1 }} ms</dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ latest_run.created_at|date:"Y-m-d H:i" }}</dd>
+        </div>
+      </dl>
+      {% if latest_run.failed_cases %}
+        <h3 class="mt">Failed cases</h3>
+        <div class="timeline mt">
+          {% for case in latest_run.failed_cases %}
+            <article class="timeline-item">
+              <strong>{{ case.id }}</strong>
+              <p>{{ case.reason }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+  {% else %}
+    <section class="card">
+      <p class="empty-state">No evaluation runs yet.</p>
+    </section>
+  {% endif %}
+
+  <section class="table-card mt">
+    <div class="card-header">
+      <h2>Recent runs</h2>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Dataset</th>
+            <th>Classifier F1</th>
+            <th>Escalation P/R</th>
+            <th>Groundedness</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in runs %}
+            <tr>
+              <td><strong>{{ run.name }}</strong></td>
+              <td>{{ run.dataset_name }}</td>
+              <td>{{ run.classifier_f1|floatformat:2 }}</td>
+              <td>{{ run.escalation_precision|floatformat:2 }} / {{ run.escalation_recall|floatformat:2 }}</td>
+              <td>{{ run.groundedness_score|floatformat:2 }}</td>
+              <td>{{ run.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td class="empty-state" colspan="6">No runs yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

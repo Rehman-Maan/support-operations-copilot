@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ticket.subject }}{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Ticket detail</p>
+      <h1>{{ ticket.subject }}</h1>
+      <p class="subtle">{{ ticket.customer.name }} &middot; {{ ticket.customer.get_tier_display }}</p>
+    </div>
+    <div class="actions">
+      <form method="post" action="{% url 'tickets:classify' ticket.id %}">
+        {% csrf_token %}
+        <button class="secondary" type="submit">Classify</button>
+      </form>
+      <form method="post" action="{% url 'tickets:summarize' ticket.id %}">
+        {% csrf_token %}
+        <button class="secondary" type="submit">Generate summary</button>
+      </form>
+      <form method="post" action="{% url 'tickets:draft_reply' ticket.id %}">
+        {% csrf_token %}
+        <button type="submit">Draft reply</button>
+      </form>
+    </div>
+  </div>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <div class="grid two">
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Timeline</h2>
+          <span class="badge {{ ticket.status }}">{{ ticket.get_status_display }}</span>
+        </div>
+        <div class="timeline">
+          {% for item in timeline %}
+            <article class="timeline-item {{ item.sender_type }}">
+              <div class="timeline-meta">
+                <strong>{{ item.get_sender_type_display }} via {{ item.get_channel_display }}</strong>
+                <span>{{ item.created_at|date:"Y-m-d H:i" }}</span>
+              </div>
+              <p>{{ item.body|linebreaksbr }}</p>
+            </article>
+          {% empty %}
+            <p class="empty-state">No messages yet.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Reply workspace</h2>
+        </div>
+        {% if reply_suggestion %}
+          <article class="suggestion-box">
+            <div class="timeline-meta">
+              <strong>Suggested reply</strong>
+              <span class="badge {% if reply_suggestion.needs_approval %}pending{% else %}low{% endif %}">
+                {% if reply_suggestion.needs_approval %}Needs approval{% else %}Ready for review{% endif %}
+              </span>
+            </div>
+            <form method="post" action="{% url 'tickets:accept_suggestion' ticket.id reply_suggestion.id %}">
+              {% csrf_token %}
+              {{ suggestion_form.as_p }}
+              <button type="submit">Add draft to timeline</button>
+            </form>
+            <form class="mt" method="post" action="{% url 'tickets:reject_suggestion' ticket.id reply_suggestion.id %}">
+              {% csrf_token %}
+              <button class="danger" type="submit">Reject draft</button>
+            </form>
+            <dl class="definition-list mt">
+              <div>
+                <dt>Proposed action</dt>
+                <dd>{{ reply_suggestion.proposed_sensitive_action|default:"-" }}</dd>
+              </div>
+              <div>
+                <dt>Internal notes</dt>
+                <dd>{{ reply_suggestion.internal_notes|default:"-" }}</dd>
+              </div>
+            </dl>
+            <h3 class="mt">Sources</h3>
+            {% for context in reply_suggestion.retrieved_contexts.all %}
+              <blockquote class="source">
+                <strong>{{ context.source_title }}</strong>
+                <p>{{ context.content_snapshot|truncatewords:45 }}</p>
+              </blockquote>
+            {% empty %}
+              <p class="empty-state">No source context was retrieved.</p>
+            {% endfor %}
+            {% include "tickets/partials/feedback_form.html" with suggestion=reply_suggestion %}
+          </article>
+        {% else %}
+          <p class="empty-state">No active reply draft. Generate one when the ticket is ready for response.</p>
+        {% endif %}
+
+        <form class="mt" method="post" action="{% url 'tickets:add_message' ticket.id %}">
+          {% csrf_token %}
+          {{ message_form.as_p }}
+          <button class="secondary" type="submit">Add manual reply</button>
+        </form>
+      </section>
+    </div>
+
+    <aside class="grid">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Ticket metadata</h2>
+        </div>
+        <dl class="definition-list">
+          <div>
+            <dt>Status</dt>
+            <dd><span class="badge {{ ticket.status }}">{{ ticket.get_status_display }}</span></dd>
+          </div>
+          <div>
+            <dt>Priority</dt>
+            <dd><span class="badge {{ ticket.priority }}">{{ ticket.get_priority_display }}</span></dd>
+          </div>
+          <div>
+            <dt>Intent</dt>
+            <dd>{{ ticket.get_intent_display|default:"Unclassified" }}</dd>
+          </div>
+          <div>
+            <dt>SLA risk</dt>
+            <dd><span class="badge {{ ticket.sla_risk_level }}">{{ ticket.get_sla_risk_level_display }}</span></dd>
+          </div>
+          <div>
+            <dt>Assigned to</dt>
+            <dd>{{ ticket.assigned_to|default:"Unassigned" }}</dd>
+          </div>
+          <div>
+            <dt>Customer</dt>
+            <dd>{{ ticket.customer.email }}</dd>
+          </div>
+        </dl>
+
+        <div class="grid mt">
+          <form method="post" action="{% url 'tickets:assign' ticket.id %}">
+            {% csrf_token %}
+            {{ assignment_form.as_p }}
+            <button class="secondary" type="submit">Update assignment</button>
+          </form>
+
+          <form method="post" action="{% url 'tickets:status' ticket.id %}">
+            {% csrf_token %}
+            {{ status_form.as_p }}
+            <button class="secondary" type="submit">Update status</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Copilot panel</h2>
+        </div>
+
+        <div class="suggestion-box">
+          <div class="timeline-meta">
+            <strong>Ticket summary</strong>
+            {% if latest_summary %}
+              <span class="badge low">Generated</span>
+            {% else %}
+              <span class="badge">Not generated</span>
+            {% endif %}
+          </div>
+          {% if latest_summary %}
+            <p>{{ latest_summary.content }}</p>
+            {% if latest_summary.internal_notes %}
+              <p class="subtle">{{ latest_summary.internal_notes }}</p>
+            {% endif %}
+            {% include "tickets/partials/feedback_form.html" with suggestion=latest_summary %}
+          {% else %}
+            <p class="empty-state">Generate a summary to populate the copilot brief.</p>
+          {% endif %}
+        </div>
+
+        <div class="suggestion-box mt">
+          <div class="timeline-meta">
+            <strong>Recommended next step</strong>
+            {% if latest_next_action %}
+              <span class="badge low">Ready</span>
+            {% else %}
+              <span class="badge">Pending</span>
+            {% endif %}
+          </div>
+          {% if latest_next_action %}
+            <p>{{ latest_next_action.content }}</p>
+            {% include "tickets/partials/feedback_form.html" with suggestion=latest_next_action %}
+          {% else %}
+            <p class="empty-state">Generate a summary to get the next recommended action.</p>
+          {% endif %}
+        </div>
+
+        <div class="suggestion-box mt">
+          <div class="timeline-meta">
+            <strong>Recommended macro</strong>
+            {% if latest_macro %}
+              <span class="badge low">Matched</span>
+            {% else %}
+              <span class="badge">No match</span>
+            {% endif %}
+          </div>
+          {% if latest_macro %}
+            <p><strong>{{ latest_macro.internal_notes }}</strong></p>
+            <p>{{ latest_macro.content }}</p>
+            {% include "tickets/partials/feedback_form.html" with suggestion=latest_macro %}
+          {% else %}
+            <p class="empty-state">No active macro has been matched yet.</p>
+          {% endif %}
+        </div>
+
+        <dl class="definition-list mt">
+          <div>
+            <dt>Predicted intent</dt>
+            <dd>{{ ticket.get_intent_display|default:"Unclassified" }}</dd>
+          </div>
+          <div>
+            <dt>Predicted priority</dt>
+            <dd>{{ ticket.get_priority_display }}</dd>
+          </div>
+          <div>
+            <dt>SLA risk</dt>
+            <dd>{{ ticket.get_sla_risk_level_display }}</dd>
+          </div>
+          <div>
+            <dt>Sentiment</dt>
+            <dd>{{ ticket.sentiment|default:"-" }}</dd>
+          </div>
+          <div>
+            <dt>Escalation needed</dt>
+            <dd>{{ ticket.needs_escalation|yesno:"Yes,No" }}</dd>
+          </div>
+          <div>
+            <dt>Reason</dt>
+            <dd>{{ ticket.classification_reason|default:"-" }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Approvals</h2>
+        </div>
+        <div class="timeline">
+          {% for approval in approvals %}
+            <article class="timeline-item">
+              <div class="timeline-meta">
+                <strong>{{ approval.get_action_type_display }}</strong>
+                <span class="badge {{ approval.status }}">{{ approval.get_status_display }}</span>
+              </div>
+              <p>{{ approval.reason }}</p>
+              {% if approval.decision_note %}
+                <p>{{ approval.decision_note }}</p>
+              {% endif %}
+              <small>
+                Requested by {{ approval.requested_by.get_full_name|default:approval.requested_by.username }}
+                {% if approval.decided_by %} &middot; Decided by {{ approval.decided_by.get_full_name|default:approval.decided_by.username }}{% endif %}
+              </small>
+            </article>
+          {% empty %}
+            <p class="empty-state">No approvals yet.</p>
+          {% endfor %}
+        </div>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

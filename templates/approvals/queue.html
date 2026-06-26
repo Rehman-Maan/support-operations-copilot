@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Approvals{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Human control</p>
+      <h1>Approval queue</h1>
+      <p class="subtle">{{ pending_count }} pending approval{{ pending_count|pluralize }} waiting for support lead review.</p>
+    </div>
+  </div>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <div class="grid">
+  {% for approval in approvals %}
+    <article class="card">
+      <div class="card-header">
+        <div>
+          <h2>{{ approval.get_action_type_display }}: {{ approval.ticket.subject }}</h2>
+          <p class="subtle">Requested by {{ approval.requested_by.get_full_name|default:approval.requested_by.username }}</p>
+        </div>
+        <span class="badge {{ approval.status }}">{{ approval.get_status_display }}</span>
+      </div>
+      <dl class="definition-list approval-meta">
+        <div>
+          <dt>Status</dt>
+          <dd><span class="badge {{ approval.status }}">{{ approval.get_status_display }}</span></dd>
+        </div>
+        <div>
+          <dt>Requested by</dt>
+          <dd>{{ approval.requested_by.get_full_name|default:approval.requested_by.username }}</dd>
+        </div>
+        <div class="span-2">
+          <dt>Reason</dt>
+          <dd>{{ approval.reason }}</dd>
+        </div>
+      </dl>
+      <div class="actions mt">
+        <a class="button secondary" href="{% url 'tickets:detail' approval.ticket.id %}">Open ticket</a>
+      </div>
+      {% if approval.proposed_payload.reply_draft %}
+        <div class="suggestion-box mt">
+          <h3>Proposed reply</h3>
+          <p>{{ approval.proposed_payload.reply_draft|linebreaksbr }}</p>
+        </div>
+      {% endif %}
+      {% if approval.status == "pending" %}
+        <div class="grid two mt">
+        <form method="post" action="{% url 'approvals:approve' approval.id %}">
+          {% csrf_token %}
+          <label>
+            Decision note
+            <textarea name="decision_note" rows="3"></textarea>
+          </label>
+          <button type="submit">Approve</button>
+        </form>
+        <form method="post" action="{% url 'approvals:reject' approval.id %}">
+          {% csrf_token %}
+          <label>
+            Decision note
+            <textarea name="decision_note" rows="3"></textarea>
+          </label>
+          <button class="danger" type="submit">Reject</button>
+        </form>
+        </div>
+      {% else %}
+        <p class="decision-note">Decision: {{ approval.decision_note|default:"No note provided." }}</p>
+      {% endif %}
+    </article>
+  {% empty %}
+    <section class="card">
+      <p class="empty-state">No approvals available.</p>
+    </section>
+  {% endfor %}
+  </div>
+{% endblock %}

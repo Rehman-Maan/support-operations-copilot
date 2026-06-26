@@ -1,0 +1,27 @@
+<form class="mt" method="post" action="{% url 'feedback:submit' suggestion.id %}">
+  {% csrf_token %}
+  <div class="grid two">
+    <p>
+      <label for="rating-{{ suggestion.id }}">Rating</label>
+      <select id="rating-{{ suggestion.id }}" name="rating" required>
+        {% for value, label in feedback_rating_choices %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </p>
+    <p>
+      <label for="failure-tag-{{ suggestion.id }}">Failure tag</label>
+      <select id="failure-tag-{{ suggestion.id }}" name="failure_tag">
+        <option value="">No failure</option>
+        {% for value, label in feedback_failure_tags %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </p>
+  </div>
+  <p>
+    <label for="comment-{{ suggestion.id }}">Feedback note</label>
+    <textarea id="comment-{{ suggestion.id }}" name="comment" rows="3"></textarea>
+  </p>
+  <button class="secondary" type="submit">Save feedback</button>
+</form>

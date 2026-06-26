@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Knowledge Base{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Policy memory</p>
+      <h1>Knowledge base</h1>
+      <p class="subtle">Upload policies, track ingestion, and manage reusable response macros.</p>
+    </div>
+  </div>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if team %}
+    <div class="grid two">
+      <section class="card">
+        <div class="panel-header">
+          <h2>Upload document</h2>
+        </div>
+        <form method="post" action="{% url 'knowledge_base:upload_document' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ document_form.as_p }}
+          <button type="submit">Upload</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="panel-header">
+          <h2>Create macro</h2>
+        </div>
+        <form method="post" action="{% url 'knowledge_base:create_macro' %}">
+          {% csrf_token %}
+          {{ macro_form.as_p }}
+          <button type="submit">Create macro</button>
+        </form>
+      </section>
+    </div>
+
+    <section class="table-card mt">
+      <div class="card-header">
+        <h2>Documents</h2>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Chunks</th>
+              <th>Uploaded</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for document in documents %}
+              <tr>
+                <td><strong>{{ document.title }}</strong></td>
+                <td>{{ document.get_document_type_display }}</td>
+                <td><span class="badge {{ document.status }}">{{ document.get_status_display }}</span></td>
+                <td>{{ document.chunks.count }}</td>
+                <td>{{ document.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                  {% if document.status == "failed" %}
+                    <form method="post" action="{% url 'knowledge_base:retry_document' document.id %}">
+                      {% csrf_token %}
+                      <button type="submit">Retry</button>
+                    </form>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td class="empty-state" colspan="6">No documents uploaded yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="table-card mt">
+      <div class="card-header">
+        <h2>Macros</h2>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Intent</th>
+              <th>Active</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for macro in macros %}
+              <tr>
+                <td><strong>{{ macro.name }}</strong></td>
+                <td>{{ macro.intent|default:"-" }}</td>
+                <td><span class="badge {% if macro.active %}low{% else %}rejected{% endif %}">{{ macro.active|yesno:"Yes,No" }}</span></td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td class="empty-state" colspan="3">No macros yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% else %}
+    <p class="empty-state">No team membership yet.</p>
+  {% endif %}
+{% endblock %}

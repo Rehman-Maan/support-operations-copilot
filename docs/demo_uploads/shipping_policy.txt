@@ -1,0 +1,14 @@
+Shipping Policy
+
+Standard delivery usually takes 3 to 5 business days after fulfillment.
+Premium customers should receive proactive follow-up if a delivery promise is
+missed.
+
+If a package is delayed, agents should check tracking, confirm the address, and
+explain that the carrier status is being reviewed.
+
+If tracking has not updated for 72 hours, the agent should open a carrier
+investigation and set a follow-up reminder.
+
+Agents should not promise same-day replacement unless support lead approval is
+already available.

@@ -1,0 +1,12 @@
+Privacy Requests Policy
+
+Personal data export and deletion requests must be escalated for review.
+
+Agents may acknowledge that the request was received, but they must not confirm
+that data has been exported or deleted until the approved privacy workflow is
+complete.
+
+Account closure requests require identity verification and support lead approval.
+
+Customer-facing replies should be clear, calm, and avoid exposing internal
+approval or compliance procedures.

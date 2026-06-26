@@ -1,0 +1,13 @@
+Refund Policy
+
+Refunds for missing deliveries require order verification, carrier tracking review,
+and support lead approval before any refund is promised to the customer.
+
+If tracking has not moved for more than 72 hours, agents should apologize,
+confirm the shipping address, and open a carrier investigation.
+
+Refunds for damaged high-value items require photos of the item, packaging
+condition, order number, and support lead approval.
+
+Agents must not say that a refund has been processed unless an approval decision
+has already been recorded.

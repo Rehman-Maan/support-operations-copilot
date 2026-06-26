@@ -1,0 +1,54 @@
+[
+  {
+    "id": "refund_late_delivery_001",
+    "subject": "Package never arrived",
+    "messages": [
+      {"sender": "customer", "text": "My order was supposed to arrive last week and tracking has not moved. I want a refund."}
+    ],
+    "expected_intent": "refund_request",
+    "expected_priority": "high",
+    "expected_needs_escalation": true,
+    "expected_policy_sources": ["refund"],
+    "expected_sensitive_action": "refund",
+    "ideal_reply_notes": ["apologize", "do not promise refund", "approval"]
+  },
+  {
+    "id": "shipping_tracking_001",
+    "subject": "Tracking has not updated",
+    "messages": [
+      {"sender": "customer", "text": "My headphones still say label created. Can someone check the shipping status?"}
+    ],
+    "expected_intent": "shipping_delay",
+    "expected_priority": "normal",
+    "expected_needs_escalation": false,
+    "expected_policy_sources": ["shipping"],
+    "expected_sensitive_action": "",
+    "ideal_reply_notes": ["tracking", "carrier", "address"]
+  },
+  {
+    "id": "damaged_item_001",
+    "subject": "Item arrived damaged",
+    "messages": [
+      {"sender": "customer", "text": "The espresso machine arrived cracked and wet. This is unacceptable."}
+    ],
+    "expected_intent": "complaint",
+    "expected_priority": "high",
+    "expected_needs_escalation": true,
+    "expected_policy_sources": ["damaged"],
+    "expected_sensitive_action": "support_lead_review",
+    "ideal_reply_notes": ["photos", "packaging", "approval"]
+  },
+  {
+    "id": "billing_duplicate_001",
+    "subject": "Charged twice",
+    "messages": [
+      {"sender": "customer", "text": "My card was charged twice for one order. Please fix the payment."}
+    ],
+    "expected_intent": "billing_issue",
+    "expected_priority": "high",
+    "expected_needs_escalation": true,
+    "expected_policy_sources": ["billing"],
+    "expected_sensitive_action": "credit_adjustment",
+    "ideal_reply_notes": ["verify payment", "credit", "approval"]
+  }
+]

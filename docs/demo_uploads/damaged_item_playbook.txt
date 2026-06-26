@@ -1,0 +1,14 @@
+Damaged Item Playbook
+
+When a customer reports a damaged item, agents should ask for clear photos of
+the damaged product, photos of the packaging, and the order number.
+
+For low-value items, agents may offer replacement review after collecting
+evidence. For high-value items, replacement or refund decisions require support
+lead approval.
+
+The reply should acknowledge the inconvenience, avoid blaming the customer or
+carrier, and explain the next step clearly.
+
+Agents must not confirm a refund, replacement, or credit until approval is
+recorded.

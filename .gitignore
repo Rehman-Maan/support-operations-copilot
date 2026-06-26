@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+celerybeat-schedule*
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+htmlcov/
+.coverage
+staticfiles/*
+!staticfiles/.gitkeep
+media/
+node_modules/
+.DS_Store

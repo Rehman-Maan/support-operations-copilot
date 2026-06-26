@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test-build-scan:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: support_copilot
+          POSTGRES_USER: support_copilot
+          POSTGRES_PASSWORD: support_copilot
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U support_copilot -d support_copilot"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - "6379:6379"
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DJANGO_SECRET_KEY: ci-secret-key
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DATABASE_URL: postgres://support_copilot:support_copilot@localhost:5432/support_copilot
+      REDIS_URL: redis://localhost:6379/0
+      OPENAI_API_KEY: ""
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run Django checks
+        run: python manage.py check
+
+      - name: Check migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run linting
+        run: ruff check .
+
+      - name: Run unit and integration tests
+        run: pytest
+
+      - name: Install Playwright browser
+        run: |
+          pip install pytest-playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run Playwright E2E smoke test
+        run: pytest tests/e2e
+
+      - name: Run support eval smoke suite
+        run: |
+          python manage.py shell -c "from django.contrib.auth import get_user_model; from apps.teams.models import Team, TeamMembership; from services.evaluations.runner import run_support_case_evaluation; User=get_user_model(); user=User.objects.create_user(username='ci-agent'); team=Team.objects.create(name='CI Support', slug='ci-support', created_by=user); TeamMembership.objects.create(team=team, user=user, role=TeamMembership.Role.SUPPORT_AGENT); run=run_support_case_evaluation('support_cases.yml', team); print(f'eval cases={run.case_count} f1={run.classifier_f1:.2f}')"
+
+      - name: Check static collection
+        run: python manage.py collectstatic --dry-run --noinput -v 0
+
+      - name: Build Docker image
+        run: docker build -f infra/docker/Dockerfile -t support-operations-copilot:ci .
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: support-operations-copilot:ci
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"

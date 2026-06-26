@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Operations overview</p>
+      <h1>Team dashboard</h1>
+      <p class="subtle">Monitor queue health, approvals, and recent support activity.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="{% url 'inbox:list' %}">Open inbox</a>
+      <a class="button" href="{% url 'approvals:queue' %}">Review approvals</a>
+    </div>
+  </div>
+
+  <section class="stat-grid" aria-label="Dashboard metrics">
+    <div class="stat">
+      <span>Open tickets</span>
+      <strong>{{ metrics.open_tickets }}</strong>
+    </div>
+    <div class="stat">
+      <span>Urgent</span>
+      <strong>{{ metrics.urgent_tickets }}</strong>
+    </div>
+    <div class="stat">
+      <span>SLA risk</span>
+      <strong>{{ metrics.sla_risk }}</strong>
+    </div>
+    <div class="stat">
+      <span>Pending approvals</span>
+      <strong>{{ metrics.pending_approvals }}</strong>
+    </div>
+  </section>
+
+  <div class="grid two">
+    <section class="table-card">
+      <div class="card-header">
+        <h2>Recent tickets</h2>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Customer</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Owner</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ticket in recent_tickets %}
+              <tr>
+                <td><a href="{% url 'tickets:detail' ticket.id %}">{{ ticket.subject }}</a></td>
+                <td>{{ ticket.customer.name }}</td>
+                <td><span class="badge {{ ticket.priority }}">{{ ticket.get_priority_display }}</span></td>
+                <td><span class="badge {{ ticket.status }}">{{ ticket.get_status_display }}</span></td>
+                <td>{{ ticket.assigned_to|default:"Unassigned" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td class="empty-state" colspan="5">No tickets yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Workspace access</h2>
+      </div>
+      {% if memberships %}
+        <div class="timeline">
+          {% for membership in memberships %}
+            <article class="timeline-item">
+              <div class="timeline-meta">
+                <strong>{{ membership.team.name }}</strong>
+                <span class="badge">{{ membership.get_role_display }}</span>
+              </div>
+              <p class="subtle">You can work inside this support workspace.</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">No team memberships yet.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

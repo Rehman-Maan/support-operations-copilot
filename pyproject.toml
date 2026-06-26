@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "support-operations-copilot"
+version = "0.1.0"
+description = "Django helpdesk copilot for ticket triage, grounded replies, and approval workflows."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "celery[redis]>=5.4,<6.0",
+  "channels>=4.1,<5.0",
+  "channels-redis>=4.2,<5.0",
+  "dj-database-url>=2.2,<3.0",
+  "Django>=5.2,<5.3",
+  "django-environ>=0.11,<1.0",
+  "djangorestframework>=3.15,<4.0",
+  "gunicorn>=22.0,<23.0",
+  "openai>=2.0,<3.0",
+  "pgvector>=0.3,<0.4",
+  "psycopg[binary]>=3.2,<4.0",
+  "redis>=5.0,<6.0",
+  "whitenoise>=6.7,<7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2,<9.0",
+  "pytest-django>=4.8,<5.0",
+  "ruff>=0.5,<1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["config*", "apps*", "services*", "workers*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.local"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

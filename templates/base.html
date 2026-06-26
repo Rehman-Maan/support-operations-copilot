@@ -1,0 +1,42 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Support Operations Copilot{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  </head>
+  <body>
+    <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="{% url 'teams:dashboard' %}">
+        <span class="brand-mark">SC</span>
+        <span class="brand-copy">
+          <strong>Support Operations Copilot</strong>
+          <small>AI-assisted support command center</small>
+        </span>
+      </a>
+      {% if request.user.is_authenticated %}
+        <nav class="topnav" aria-label="Primary navigation">
+          <a class="{% if request.resolver_match.namespace == 'teams' %}active{% endif %}" href="{% url 'teams:dashboard' %}">Dashboard</a>
+          <a class="{% if request.resolver_match.namespace == 'inbox' or request.resolver_match.namespace == 'tickets' %}active{% endif %}" href="{% url 'inbox:list' %}">Inbox</a>
+          <a class="{% if request.resolver_match.namespace == 'approvals' %}active{% endif %}" href="{% url 'approvals:queue' %}">Approvals</a>
+          <a class="{% if request.resolver_match.namespace == 'knowledge_base' %}active{% endif %}" href="{% url 'knowledge_base:list' %}">Knowledge</a>
+          <a class="{% if request.resolver_match.namespace == 'evaluations' %}active{% endif %}" href="{% url 'evaluations:dashboard' %}">Evaluations</a>
+        </nav>
+        <div class="user-actions">
+          <span class="user-pill">{{ request.user.get_full_name|default:request.user.username }}</span>
+          <form class="logout-form" method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button class="secondary" type="submit">Log out</button>
+          </form>
+        </div>
+      {% endif %}
+    </header>
+    <main class="page">
+      {% block content %}{% endblock %}
+    </main>
+    </div>
+  </body>
+</html>

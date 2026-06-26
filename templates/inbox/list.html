@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Ticket queue</p>
+      <h1>Inbox</h1>
+      <p class="subtle">Scan work by ownership, urgency, approval state, and SLA risk.</p>
+    </div>
+  </div>
+
+  <nav class="filter-tabs" aria-label="Inbox filters">
+    <a class="{% if filter == 'my' %}active{% endif %}" href="{% url 'inbox:list' %}?filter=my">My tickets</a>
+    <a class="{% if filter == 'unassigned' %}active{% endif %}" href="{% url 'inbox:list' %}?filter=unassigned">Unassigned</a>
+    <a class="{% if filter == 'urgent' %}active{% endif %}" href="{% url 'inbox:list' %}?filter=urgent">Urgent</a>
+    <a class="{% if filter == 'pending_approval' %}active{% endif %}" href="{% url 'inbox:list' %}?filter=pending_approval">Pending approval</a>
+    <a class="{% if filter == 'waiting_on_customer' %}active{% endif %}" href="{% url 'inbox:list' %}?filter=waiting_on_customer">Waiting on customer</a>
+    <a class="{% if filter == 'high_sla_risk' %}active{% endif %}" href="{% url 'inbox:list' %}?filter=high_sla_risk">High SLA risk</a>
+  </nav>
+
+  <section class="table-card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Customer</th>
+          <th>Priority</th>
+          <th>Intent</th>
+          <th>Status</th>
+          <th>SLA due</th>
+          <th>Tier</th>
+          <th>Latest message</th>
+        </tr>
+        </thead>
+        <tbody>
+          {% for ticket in tickets %}
+            <tr>
+              <td><a href="{% url 'tickets:detail' ticket.id %}"><strong>{{ ticket.subject }}</strong></a></td>
+              <td>{{ ticket.customer.name }}</td>
+              <td><span class="badge {{ ticket.priority }}">{{ ticket.get_priority_display }}</span></td>
+              <td>{{ ticket.get_intent_display|default:"Unclassified" }}</td>
+              <td><span class="badge {{ ticket.status }}">{{ ticket.get_status_display }}</span></td>
+              <td>{{ ticket.sla_due_at|date:"Y-m-d H:i"|default:"-" }}</td>
+              <td>{{ ticket.customer.get_tier_display }}</td>
+              <td>
+                {% if ticket.latest_inbox_message %}
+                  {{ ticket.latest_inbox_message.body|truncatechars:80 }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td class="empty-state" colspan="8">No tickets match this filter.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}
