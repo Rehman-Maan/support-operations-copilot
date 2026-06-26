@@ -1,6 +1,8 @@
 # Deployment Notes
 
-These notes describe a production-style deployment for the Support Operations Copilot.
+These notes describe a production-style deployment for Support Operations
+Copilot. The project is designed to run as a Django web process plus Celery
+workers backed by PostgreSQL and Redis.
 
 ## Required Services
 
@@ -25,7 +27,7 @@ OPENAI_API_KEY=optional-production-key
 
 Use managed secrets for production values. Do not commit `.env`.
 
-## Release Checklist
+## Local Production Image
 
 1. Build the image:
 
@@ -33,7 +35,7 @@ Use managed secrets for production values. Do not commit `.env`.
    docker build -f infra/docker/Dockerfile -t support-operations-copilot:release .
    ```
 
-2. Run checks before deploying:
+2. Run the quality gate:
 
    ```powershell
    docker compose exec web python manage.py check
@@ -42,35 +44,69 @@ Use managed secrets for production values. Do not commit `.env`.
    docker compose exec web ruff check .
    ```
 
-3. Apply database migrations after the new release is available:
+## Runtime Commands
 
-   ```powershell
-   python manage.py migrate --noinput
-   ```
+Apply database migrations after the new release is available:
 
-4. Collect static files:
+```powershell
+python manage.py migrate --noinput
+```
 
-   ```powershell
-   python manage.py collectstatic --noinput
-   ```
+Collect static files:
 
-5. Start the web process:
+```powershell
+python manage.py collectstatic --noinput
+```
 
-   ```powershell
-   gunicorn config.wsgi:application --bind 0.0.0.0:8000
-   ```
+Start the web process:
 
-6. Start a worker process:
+```powershell
+gunicorn config.wsgi:application --bind 0.0.0.0:8000
+```
 
-   ```powershell
-   celery -A config worker --loglevel=info
-   ```
+Start a worker process:
 
-7. Confirm the health endpoint:
+```powershell
+celery -A config worker --loglevel=info
+```
 
-   ```text
-   https://your-domain.example.com/health/
-   ```
+Confirm the health endpoint:
+
+```text
+https://your-domain.example.com/health/
+```
+
+Expected response:
+
+```json
+{"status": "ok", "service": "support-operations-copilot"}
+```
+
+## Suggested Hosting Shape
+
+Any platform that can run a Docker image, PostgreSQL, Redis, and a background
+worker should work. Good options include Render, Railway, Fly.io, DigitalOcean,
+or a VPS.
+
+Minimum process layout:
+
+- `web`: Gunicorn serving Django.
+- `worker`: Celery worker using the same image.
+- `postgres`: managed PostgreSQL or pgvector-ready database.
+- `redis`: managed Redis instance.
+- `media`: persistent storage for uploaded knowledge documents.
+
+## Pre-Deploy Checklist
+
+- `DJANGO_DEBUG=False`.
+- `DJANGO_SECRET_KEY` is unique and stored as a secret.
+- `DATABASE_URL` points to the production database.
+- `REDIS_URL` points to the production Redis instance.
+- `DJANGO_ALLOWED_HOSTS` includes only the deployed host.
+- `DJANGO_CSRF_TRUSTED_ORIGINS` includes the deployed HTTPS origin.
+- `OPENAI_API_KEY` is configured only if model-backed AI features are desired.
+- PostgreSQL backups are enabled.
+- Uploaded media files are persistent.
 
 ## GitHub Actions
 

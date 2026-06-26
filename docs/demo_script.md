@@ -1,6 +1,12 @@
 # Demo Script
 
-Use this as the storyboard for a short demo video or GIF.
+Use this as the storyboard for a short portfolio video or GIF.
+
+Suggested title:
+
+```text
+Support Operations Copilot - AI support workflow with human approvals
+```
 
 ## Setup
 
@@ -17,22 +23,67 @@ Agent: demo.agent / DemoPass123!
 Lead: demo.lead / DemoPass123!
 ```
 
+## Short Voiceover
+
+This is a support operations copilot for ecommerce teams. It helps agents triage
+tickets, draft replies from policy knowledge, and route sensitive actions like
+refunds or data deletion through human approval. The goal is faster support
+without letting AI make unsafe customer-impacting decisions.
+
 ## Walkthrough
 
-1. Open `http://localhost:8000/` and show the operational dashboard.
-2. Open the inbox and point out assigned tickets, urgent tickets, SLA risk, and
-   pending approval filters.
-3. Open an ecommerce ticket and run classification to show intent, priority,
-   escalation, sentiment, and reason.
-4. Open the knowledge base and show uploaded policy or FAQ documents and macros.
-5. Return to the ticket and generate a grounded reply draft.
-6. Accept a sensitive refund or cancellation draft to create an approval request.
-7. Log in as the support lead and approve or reject the request from `/approvals/`.
-8. Return to the ticket to show the audit trail and final timeline.
-9. Open `/evaluations/`, run the support-case evaluation, and show metrics.
+1. Open `http://localhost:8000/`.
+   Show the dashboard metrics: open tickets, urgent work, SLA risk, and pending
+   approvals.
+
+2. Open `/inbox/`.
+   Show filters for assigned tickets, urgent tickets, pending approvals, waiting
+   on customer, and high SLA risk.
+
+3. Open an ecommerce ticket.
+   Run classification and show intent, priority, sentiment, SLA risk, escalation,
+   and explanation.
+
+4. Generate a summary.
+   Show the copilot panel with internal summary, recommended next step, and macro
+   recommendation.
+
+5. Draft a reply.
+   Show that the draft is editable and grounded in retrieved knowledge.
+
+6. Trigger a sensitive action.
+   Use a refund, cancellation, privacy, or data deletion scenario to show that the
+   AI cannot directly execute the action.
+
+7. Log in as `demo.lead`.
+   Open `/approvals/` and approve or reject the request.
+
+8. Return to the ticket.
+   Show the ticket timeline and approval audit trail.
+
+9. Open `/knowledge/`.
+   Show policy documents, ingestion status, chunks, and macros.
+
+10. Open `/evaluations/`.
+    Run the support-case evaluation and show classifier, escalation, groundedness,
+    latency, and failed-case metrics.
+
+## Suggested Recording Order
+
+Use this order for a 90 to 120 second demo:
+
+1. Dashboard.
+2. Inbox.
+3. Ticket detail.
+4. Copilot summary and draft.
+5. Approval queue.
+6. Knowledge base.
+7. Evaluation dashboard.
 
 ## Recording Tips
 
 - Keep browser width around 1440 px for the cleanest dashboard and ticket layout.
 - Use the seeded ecommerce records so the story feels realistic.
 - Mention the safety model: AI suggests and drafts, humans approve sensitive action.
+- Keep the browser zoom at 100%.
+- Hide local terminal windows unless you are showing setup commands.
